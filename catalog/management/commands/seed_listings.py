@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from django.core.files import File
@@ -5,8 +6,12 @@ from django.core.management.base import BaseCommand
 
 from catalog.models import Listing, ListingImage, ListingVideo
 
-# Sibling of shop-backend/ — where shop/public/images/houses/*.jpg already live.
-FRONTEND_IMAGES_DIR = Path(__file__).resolve().parents[4] / "shop" / "public" / "images" / "houses"
+# Sibling of shop-backend/ — where shop/public/images/houses/*.jpg live locally.
+# SEED_IMAGES_DIR overrides this where that sibling repo isn't present (e.g. production).
+FRONTEND_IMAGES_DIR = Path(
+    os.environ.get("SEED_IMAGES_DIR")
+    or Path(__file__).resolve().parents[4] / "shop" / "public" / "images" / "houses"
+)
 
 SAMPLE_VIDEO_URL = "https://www.w3schools.com/html/mov_bbb.mp4"
 
