@@ -9,5 +9,5 @@ urlpatterns = [
     path("api/", include("orders.urls")),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# No object storage (S3/Cloudinary) configured — serve uploaded media directly via Django.
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
