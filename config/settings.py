@@ -5,6 +5,7 @@ Django settings for config project.
 import os
 from pathlib import Path
 
+import dj_database_url
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -16,6 +17,12 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-dev-key-change-me")
 DEBUG = os.environ.get("DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+
+CSRF_TRUSTED_ORIGINS = [
+    origin for origin in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",") if origin
+]
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 INSTALLED_APPS = [
@@ -34,6 +41,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -63,15 +71,19 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 
+_local_db_url = "postgres://{user}:{password}@{host}:{port}/{name}".format(
+    user=os.environ.get("DB_USER", "shop_backend"),
+    password=os.environ.get("DB_PASSWORD", ""),
+    host=os.environ.get("DB_HOST", "localhost"),
+    port=os.environ.get("DB_PORT", "5432"),
+    name=os.environ.get("DB_NAME", "shop_backend"),
+)
+
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB_NAME", "shop_backend"),
-        "USER": os.environ.get("DB_USER", "shop_backend"),
-        "PASSWORD": os.environ.get("DB_PASSWORD", ""),
-        "HOST": os.environ.get("DB_HOST", "localhost"),
-        "PORT": os.environ.get("DB_PORT", "5432"),
-    }
+    "default": dj_database_url.config(
+        default=os.environ.get("DATABASE_URL", _local_db_url),
+        conn_max_age=600,
+    )
 }
 
 
@@ -93,6 +105,15 @@ USE_TZ = True
 
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
